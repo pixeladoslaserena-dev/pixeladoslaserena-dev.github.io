@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin · Pixelados by ximelotus</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --cream: #FAF8F4;
+      --cream-dark: #F2EDE5;
+      --charcoal: #1C1C1C;
+      --warm-gray: #8A8480;
+      --accent: #C4956A;
+      --accent-light: #E8D5BC;
+      --white: #FFFFFF;
+      --green: #4CAF50;
+      --red: #E53935;
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-body); background: var(--cream-dark); color: var(--charcoal); min-height: 100vh; }
+
+    /* ── LOGIN ── */
+    #login-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .login-box {
+      background: var(--white);
+      border: 1px solid var(--accent-light);
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .login-logo {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .login-logo span { color: var(--accent); }
+    .login-sub { font-size: 0.8rem; color: var(--warm-gray); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 36px; }
+    .login-label { display: block; text-align: left; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--warm-gray); margin-bottom: 8px; }
+    .login-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid var(--accent-light);
+      background: var(--cream);
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 20px;
+    }
+    .login-input:focus { border-color: var(--accent); }
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--charcoal);
+      color: var(--white);
+      border: none;
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .login-btn:hover { background: var(--accent); }
+    .login-error { color: var(--red); font-size: 0.82rem; margin-top: 12px; display: none; }
+
+    /* ── PANEL ── */
+    #admin-panel { display: none; }
+
+    .admin-nav {
+      background: var(--charcoal);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .admin-nav-logo { font-family: var(--font-display); font-size: 1.2rem; color: var(--white); }
+    .admin-nav-logo span { color: var(--accent); }
+    .admin-nav-right { display: flex; align-items: center; gap: 20px; }
+    .admin-badge { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--warm-gray); }
+    .logout-btn {
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.6);
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .logout-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .admin-body {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    .admin-header {
+      margin-bottom: 40px;
+    }
+    .admin-title { font-family: var(--font-display); font-size: 2rem; font-weight: 600; margin-bottom: 6px; }
+    .admin-subtitle { font-size: 0.85rem; color: var(--warm-gray); }
+
+    .save-bar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--cream-dark);
+      padding: 14px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--accent-light);
+      margin-bottom: 40px;
+    }
+    .save-bar-text { font-size: 0.8rem; color: var(--warm-gray); }
+    .save-btn {
+      padding: 10px 28px;
+      background: var(--accent);
+      color: var(--white);
+      border: none;
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .save-btn:hover { background: var(--charcoal); }
+
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      background: var(--charcoal);
+      color: var(--white);
+      padding: 14px 24px;
+      font-size: 0.85rem;
+      border-left: 4px solid var(--accent);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    /* ── SECTIONS ── */
+    .section-card {
+      background: var(--white);
+      border: 1px solid var(--accent-light);
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+    .section-card-title {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .section-card-desc { font-size: 0.78rem; color: var(--warm-gray); margin-bottom: 28px; }
+
+    .field { margin-bottom: 20px; }
+    .field:last-child { margin-bottom: 0; }
+    .field-label {
+      display: block;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--warm-gray);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    .field-hint { font-size: 0.72rem; color: var(--accent); margin-top: 4px; }
+    input[type="text"], input[type="tel"], input[type="email"], input[type="url"], textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--accent-light);
+      background: var(--cream);
+      font-family: var(--font-body);
+      font-size: 0.92rem;
+      color: var(--charcoal);
+      outline: none;
+      transition: border-color 0.2s;
+      resize: vertical;
+    }
+    input:focus, textarea:focus { border-color: var(--accent); }
+    textarea { min-height: 80px; line-height: 1.6; }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media(max-width: 600px) { .field-row { grid-template-columns: 1fr; } }
+
+    /* Testimonio cards dentro del admin */
+    .testi-group {
+      border: 1px solid var(--accent-light);
+      padding: 20px;
+      margin-bottom: 16px;
+      background: var(--cream);
+    }
+    .testi-group-title {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+
+    /* ── CHANGE PASSWORD ── */
+    .danger-zone {
+      border: 1px solid #FFCDD2;
+      background: #FFF8F8;
+      padding: 24px 32px;
+      margin-top: 40px;
+    }
+    .danger-title { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--red); margin-bottom: 16px; font-weight: 500; }
+    .danger-row { display: flex; gap: 12px; align-items: flex-end; }
+    .danger-row input { flex: 1; }
+    .danger-btn {
+      padding: 10px 20px;
+      background: var(--red);
+      color: var(--white);
+      border: none;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.2s;
+    }
+    .danger-btn:hover { opacity: 0.85; }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════
+     LOGIN
+════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Pixelados <span>by ximelotus</span></div>
+    <div class="login-sub">Panel de administración</div>
+    <label class="login-label" for="pwd">Contraseña</label>
+    <input type="password" id="pwd" class="login-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" />
+    <button class="login-btn" onclick="doLogin()">Ingresar</button>
+    <div class="login-error" id="login-error">Contraseña incorrecta. Inténtalo de nuevo.</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════
+     PANEL
+════════════════════════════ -->
+<div id="admin-panel">
+
+  <nav class="admin-nav">
+    <div class="admin-nav-logo">Pixelados <span>by ximelotus</span></div>
+    <div class="admin-nav-right">
+      <span class="admin-badge">✦ Admin</span>
+      <button class="logout-btn" onclick="doLogout()">Cerrar sesión</button>
+    </div>
+  </nav>
+
+  <div class="admin-body">
+
+    <div class="admin-header">
+      <h1 class="admin-title">Panel de contenido</h1>
+      <p class="admin-subtitle">Edita los textos y datos de tu página. Los cambios se guardan en tu navegador y puedes exportar el HTML actualizado.</p>
+    </div>
+
+    <div class="save-bar">
+      <span class="save-bar-text">Los cambios se guardan aquí y puedes descargar tu HTML actualizado</span>
+      <button class="save-btn" onclick="saveAll()">Guardar cambios</button>
+    </div>
+
+    <!-- SEO -->
+    <div class="section-card">
+      <div class="section-card-title">SEO &amp; Metadatos</div>
+      <div class="section-card-desc">Estos textos aparecen en Google y cuando compartes el link por WhatsApp o redes.</div>
+      <div class="field">
+        <label class="field-label" for="seo-title">Título de la página (Google)</label>
+        <input type="text" id="seo-title" maxlength="70" />
+        <div class="field-hint">Máximo 60 caracteres recomendado</div>
+      </div>
+      <div class="field">
+        <label class="field-label" for="seo-desc">Descripción (Google)</label>
+        <textarea id="seo-desc" rows="3" maxlength="160"></textarea>
+        <div class="field-hint">Máximo 155 caracteres recomendado</div>
+      </div>
+    </div>
+
+    <!-- CONTACTO -->
+    <div class="section-card">
+      <div class="section-card-title">Contacto</div>
+      <div class="section-card-desc">Número de WhatsApp y correo que aparecen en la página.</div>
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label" for="whatsapp">WhatsApp (con código país)</label>
+          <input type="tel" id="whatsapp" placeholder="56954000272" />
+          <div class="field-hint">Sin el + ni espacios. Ej: 56954000272</div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="email">Correo electrónico</label>
+          <input type="email" id="email" />
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label" for="instagram">Instagram (solo el @usuario)</label>
+        <input type="text" id="instagram" placeholder="ximelotus" />
+      </div>
+      <div class="field">
+        <label class="field-label" for="wa-message">Mensaje automático de WhatsApp</label>
+        <textarea id="wa-message" rows="2"></textarea>
+        <div class="field-hint">Texto que se pre-llena cuando alguien te escribe desde la web</div>
+      </div>
+    </div>
+
+    <!-- HERO -->
+    <div class="section-card">
+      <div class="section-card-title">Sección Hero (inicio)</div>
+      <div class="section-card-desc">El texto grande que se ve al entrar a la página.</div>
+      <div class="field">
+        <label class="field-label" for="hero-eyebrow">Texto pequeño sobre el título</label>
+        <input type="text" id="hero-eyebrow" />
+      </div>
+      <div class="field">
+        <label class="field-label" for="hero-title">Título principal</label>
+        <textarea id="hero-title" rows="3"></textarea>
+      </div>
+      <div class="field">
+        <label class="field-label" for="hero-subtitle">Subtítulo</label>
+        <textarea id="hero-subtitle" rows="2"></textarea>
+      </div>
+    </div>
+
+    <!-- PRECIOS -->
+    <div class="section-card">
+      <div class="section-card-title">Packs / Precios</div>
+      <div class="section-card-desc">Los tres packs que se muestran en la sección de servicios.</div>
+
+      <div class="testi-group">
+        <div class="testi-group-title">Pack 1 (Esencial)</div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label" for="p1-name">Nombre del pack</label>
+            <input type="text" id="p1-name" />
+          </div>
+          <div class="field">
+            <label class="field-label" for="p1-price">Precio</label>
+            <input type="text" id="p1-price" placeholder="$XX.000" />
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="p1-desc">Descripción breve</label>
+          <textarea id="p1-desc" rows="2"></textarea>
+        </div>
+      </div>
+
+      <div class="testi-group">
+        <div class="testi-group-title">Pack 2 (Intermedio)</div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label" for="p2-name">Nombre del pack</label>
+            <input type="text" id="p2-name" />
+          </div>
+          <div class="field">
+            <label class="field-label" for="p2-price">Precio</label>
+            <input type="text" id="p2-price" placeholder="$XX.000" />
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="p2-desc">Descripción breve</label>
+          <textarea id="p2-desc" rows="2"></textarea>
+        </div>
+      </div>
+
+      <div class="testi-group">
+        <div class="testi-group-title">Pack 3 (Premium)</div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label" for="p3-name">Nombre del pack</label>
+            <input type="text" id="p3-name" />
+          </div>
+          <div class="field">
+            <label class="field-label" for="p3-price">Precio</label>
+            <input type="text" id="p3-price" placeholder="$XX.000" />
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="p3-desc">Descripción breve</label>
+          <textarea id="p3-desc" rows="2"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- TESTIMONIOS -->
+    <div class="section-card">
+      <div class="section-card-title">Testimonios</div>
+      <div class="section-card-desc">Edita los tres testimonios que aparecen en la página.</div>
+
+      <div class="testi-group">
+        <div class="testi-group-title">Testimonio 1</div>
+        <div class="field">
+          <label class="field-label" for="t1-text">Texto del testimonio</label>
+          <textarea id="t1-text" rows="3"></textarea>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label" for="t1-name">Nombre</label>
+            <input type="text" id="t1-name" />
+          </div>
+          <div class="field">
+            <label class="field-label" for="t1-biz">Negocio · Ciudad</label>
+            <input type="text" id="t1-biz" />
+          </div>
+        </div>
+      </div>
+
+      <div class="testi-group">
+        <div class="testi-group-title">Testimonio 2</div>
+        <div class="field">
+          <label class="field-label" for="t2-text">Texto del testimonio</label>
+          <textarea id="t2-text" rows="3"></textarea>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label" for="t2-name">Nombre</label>
+            <input type="text" id="t2-name" />
+          </div>
+          <div class="field">
+            <label class="field-label" for="t2-biz">Negocio · Ciudad</label>
+            <input type="text" id="t2-biz" />
+          </div>
+        </div>
+      </div>
+
+      <div class="testi-group">
+        <div class="testi-group-title">Testimonio 3</div>
+        <div class="field">
+          <label class="field-label" for="t3-text">Texto del testimonio</label>
+          <textarea id="t3-text" rows="3"></textarea>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label" for="t3-name">Nombre</label>
+            <input type="text" id="t3-name" />
+          </div>
+          <div class="field">
+            <label class="field-label" for="t3-biz">Negocio · Ciudad</label>
+            <input type="text" id="t3-biz" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CAMBIAR CONTRASEÑA -->
+    <div class="danger-zone">
+      <div class="danger-title">⚠ Cambiar contraseña</div>
+      <div class="danger-row">
+        <div class="field" style="margin:0; flex:1">
+          <label class="field-label" for="new-pwd">Nueva contraseña</label>
+          <input type="password" id="new-pwd" placeholder="Mínimo 6 caracteres" />
+        </div>
+        <div class="field" style="margin:0; flex:1">
+          <label class="field-label" for="new-pwd2">Confirmar contraseña</label>
+          <input type="password" id="new-pwd2" placeholder="Repite la contraseña" />
+        </div>
+        <button class="danger-btn" onclick="changePassword()">Cambiar</button>
+      </div>
+    </div>
+
+  </div><!-- /admin-body -->
+</div><!-- /admin-panel -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── CONTRASEÑA POR DEFECTO ──
+  // La primera vez es "pixelados2025" — cámbiala desde el panel
+  const DEFAULT_PWD = 'pixelados2025';
+
+  function getPassword() {
+    return localStorage.getItem('px_admin_pwd') || DEFAULT_PWD;
+  }
+
+  function doLogin() {
+    const input = document.getElementById('pwd').value;
+    const err = document.getElementById('login-error');
+    if (input === getPassword()) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('admin-panel').style.display = 'block';
+      loadData();
+      err.style.display = 'none';
+    } else {
+      err.style.display = 'block';
+      document.getElementById('pwd').value = '';
+      document.getElementById('pwd').focus();
+    }
+  }
+
+  function doLogout() {
+    document.getElementById('admin-panel').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('pwd').value = '';
+  }
+
+  function changePassword() {
+    const p1 = document.getElementById('new-pwd').value;
+    const p2 = document.getElementById('new-pwd2').value;
+    if (p1.length < 6) { showToast('La contraseña debe tener al menos 6 caracteres', true); return; }
+    if (p1 !== p2) { showToast('Las contraseñas no coinciden', true); return; }
+    localStorage.setItem('px_admin_pwd', p1);
+    document.getElementById('new-pwd').value = '';
+    document.getElementById('new-pwd2').value = '';
+    showToast('Contraseña actualizada ✓');
+  }
+
+  // ── DEFAULTS ──
+  const DEFAULTS = {
+    'seo-title': 'Pixelados by ximelotus | Fotografía Gastronómica en Chile',
+    'seo-desc': 'Fotografía profesional de productos para cafeterías, restaurantes y emprendimientos gastronómicos en Chile.',
+    'whatsapp': '56954000272',
+    'email': 'pixelados.laserena@gmail.com',
+    'instagram': 'ximelotus',
+    'wa-message': 'Hola! Vi tu web y quiero cotizar fotografía para mi negocio gastronómico',
+    'hero-eyebrow': 'Fotografía gastronómica · Chile',
+    'hero-title': 'Fotos que hacen que tus productos se vendan solos.',
+    'hero-subtitle': 'Sesiones de fotografía profesional para cafeterías, restaurantes y emprendimientos gastronómicos.',
+    'p1-name': 'Pack Esencial', 'p1-price': '', 'p1-desc': '',
+    'p2-name': 'Pack Completo', 'p2-price': '', 'p2-desc': '',
+    'p3-name': 'Pack Premium', 'p3-price': '', 'p3-desc': '',
+    't1-text': '', 't1-name': '', 't1-biz': '',
+    't2-text': '', 't2-name': '', 't2-biz': '',
+    't3-text': '', 't3-name': '', 't3-biz': '',
+  };
+
+  const FIELDS = Object.keys(DEFAULTS);
+
+  function loadData() {
+    const stored = JSON.parse(localStorage.getItem('px_content') || '{}');
+    FIELDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = stored[id] !== undefined ? stored[id] : DEFAULTS[id];
+    });
+  }
+
+  function saveAll() {
+    const data = {};
+    FIELDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) data[id] = el.value;
+    });
+    localStorage.setItem('px_content', JSON.stringify(data));
+    showToast('Cambios guardados ✓');
+  }
+
+  function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.borderLeftColor = isError ? '#E53935' : '#C4956A';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // Enter en login
+  document.getElementById('pwd').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+</script>
+</body>
+</html>
