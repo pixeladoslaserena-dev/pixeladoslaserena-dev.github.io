@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestión · Pixelados</title>
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />
+  <meta name="googlebot" content="noindex, nofollow" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --cream: #FAF8F4; --cream-dark: #F2EDE5; --charcoal: #1C1C1C;
+      --warm-gray: #8A8480; --accent: #C4956A; --accent-light: #E8D5BC;
+      --white: #FFFFFF; --green: #2E7D32; --green-light: #E8F5E9;
+      --red: #C62828; --red-light: #FFEBEE; --blue: #1565C0; --blue-light: #E3F2FD;
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-body); background: var(--cream-dark); color: var(--charcoal); min-height: 100vh; }
+
+    /* ── PANTALLA DE BLOQUEO TOTAL ── */
+    /* El panel está COMPLETAMENTE oculto hasta autenticación real */
+    #panel-container {
+      display: none; /* No existe en DOM hasta auth exitosa */
+    }
+
+    /* ── LOGIN ── */
+    #login-screen {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 24px;
+    }
+    .login-box {
+      background: var(--white); border: 1px solid var(--accent-light);
+      padding: 48px 40px; width: 100%; max-width: 420px; text-align: center;
+    }
+    .login-logo { font-family: var(--font-display); font-size: 2rem; font-weight: 600; margin-bottom: 4px; }
+    .login-logo span { color: var(--accent); }
+    .login-sub { font-size: 0.75rem; color: var(--warm-gray); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 36px; }
+    .login-label { display: block; text-align: left; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--warm-gray); margin-bottom: 8px; margin-top: 16px; }
+    .login-input { width: 100%; padding: 12px 16px; border: 1px solid var(--accent-light); background: var(--cream); font-family: var(--font-body); font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
+    .login-input:focus { border-color: var(--accent); }
+    .login-hint { font-size: 0.72rem; color: var(--warm-gray); text-align: left; margin-top: 6px; margin-bottom: 8px; }
+    .login-btn { width: 100%; padding: 14px; background: var(--charcoal); color: var(--white); border: none; font-family: var(--font-body); font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: background 0.3s; margin-top: 16px; }
+    .login-btn:hover { background: var(--accent); }
+    .login-error { color: var(--red); font-size: 0.82rem; margin-top: 12px; display: none; padding: 10px; background: var(--red-light); }
+    .attempts-warning { font-size: 0.75rem; color: var(--warm-gray); margin-top: 8px; }
+    .github-info { background: var(--blue-light); border-left: 3px solid var(--blue); padding: 12px 16px; text-align: left; font-size: 0.78rem; color: var(--blue); margin-top: 20px; line-height: 1.6; }
+    .github-info a { color: var(--blue); font-weight: 500; }
+
+    /* ── BLOQUEADO ── */
+    #blocked-screen {
+      display: none; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 24px; flex-direction: column; gap: 16px;
+    }
+    .blocked-box { background: var(--white); border: 1px solid #FFCDD2; padding: 48px 40px; width: 100%; max-width: 400px; text-align: center; }
+    .blocked-icon { font-size: 3rem; margin-bottom: 16px; }
+    .blocked-title { font-family: var(--font-display); font-size: 1.8rem; color: var(--red); margin-bottom: 8px; }
+    .blocked-sub { font-size: 0.85rem; color: var(--warm-gray); margin-bottom: 24px; line-height: 1.6; }
+    .blocked-timer { font-size: 0.8rem; color: var(--red); font-weight: 500; }
+
+    /* ── NAV ── */
+    .admin-nav { background: var(--charcoal); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 100; }
+    .admin-nav-logo { font-family: var(--font-display); font-size: 1.2rem; color: var(--white); }
+    .admin-nav-logo span { color: var(--accent); }
+    .admin-nav-right { display: flex; align-items: center; gap: 16px; }
+    .admin-user { font-size: 0.72rem; color: rgba(255,255,255,0.5); }
+    .nav-btn { padding: 8px 16px; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.6); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+    .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── TABS ── */
+    .admin-tabs { background: var(--white); border-bottom: 1px solid var(--accent-light); display: flex; overflow-x: auto; }
+    .tab-btn { padding: 16px 24px; font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; background: none; border: none; cursor: pointer; color: var(--warm-gray); border-bottom: 2px solid transparent; white-space: nowrap; transition: all 0.2s; }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ── BODY ── */
+    .admin-body { max-width: 900px; margin: 0 auto; padding: 32px 24px 80px; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .card { background: var(--white); border: 1px solid var(--accent-light); padding: 28px; margin-bottom: 20px; }
+    .card-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; }
+    .card-desc { font-size: 0.78rem; color: var(--warm-gray); margin-bottom: 24px; }
+    .field { margin-bottom: 18px; }
+    .field:last-child { margin-bottom: 0; }
+    .field-label { display: block; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--warm-gray); margin-bottom: 7px; font-weight: 500; }
+    .field-hint { font-size: 0.7rem; color: var(--accent); margin-top: 4px; }
+    input[type="text"], input[type="tel"], input[type="email"], input[type="url"], input[type="password"], textarea {
+      width: 100%; padding: 10px 14px; border: 1px solid var(--accent-light); background: var(--cream);
+      font-family: var(--font-body); font-size: 0.9rem; color: var(--charcoal); outline: none; transition: border-color 0.2s; resize: vertical;
+    }
+    input:focus, textarea:focus { border-color: var(--accent); background: var(--white); }
+    textarea { min-height: 80px; line-height: 1.6; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media(max-width:600px) { .field-row { grid-template-columns: 1fr; } }
+    .img-preview-placeholder { width: 100%; height: 180px; background: var(--cream-dark); border: 1px dashed var(--accent-light); display: flex; align-items: center; justify-content: center; color: var(--warm-gray); font-size: 0.8rem; margin-top: 8px; }
+    .portfolio-items { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media(max-width:600px) { .portfolio-items { grid-template-columns: 1fr; } }
+    .portfolio-item { border: 1px solid var(--accent-light); background: var(--cream); padding: 16px; }
+    .portfolio-item-num { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; font-weight: 500; }
+    .item-group { border: 1px solid var(--accent-light); padding: 20px; margin-bottom: 14px; background: var(--cream); }
+    .item-group-title { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; font-weight: 500; }
+    .save-bar { position: sticky; top: 60px; z-index: 50; background: var(--cream-dark); padding: 12px 0; border-bottom: 1px solid var(--accent-light); margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between; }
+    .save-bar-left { font-size: 0.78rem; color: var(--warm-gray); }
+    .save-btn { padding: 10px 28px; background: var(--accent); color: var(--white); border: none; font-family: var(--font-body); font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: background 0.3s; }
+    .save-btn:hover { background: var(--charcoal); }
+    .save-btn:disabled { background: var(--accent-light); cursor: not-allowed; }
+    .status-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; padding: 4px 10px; font-weight: 500; }
+    .status-badge.success { background: var(--green-light); color: var(--green); }
+    .status-badge.error { background: var(--red-light); color: var(--red); }
+    .status-badge.info { background: var(--blue-light); color: var(--blue); }
+    .toast { position: fixed; bottom: 28px; right: 28px; padding: 14px 20px; background: var(--charcoal); color: var(--white); font-size: 0.85rem; border-left: 4px solid var(--accent); opacity: 0; transform: translateY(10px); transition: all 0.3s; pointer-events: none; z-index: 999; max-width: 320px; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.error { border-left-color: var(--red); }
+    .toast.success { border-left-color: var(--green); }
+    .github-status { background: var(--blue-light); border: 1px solid #BBDEFB; padding: 16px 20px; margin-bottom: 24px; font-size: 0.82rem; color: var(--blue); }
+    .github-status strong { display: block; margin-bottom: 4px; }
+    .github-status.connected { background: var(--green-light); border-color: #C8E6C9; color: var(--green); }
+    .github-status.error { background: var(--red-light); border-color: #FFCDD2; color: var(--red); }
+    .loader { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .danger-zone { border: 1px solid #FFCDD2; background: #FFF8F8; padding: 24px; margin-top: 32px; }
+    .danger-title { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--red); margin-bottom: 16px; font-weight: 500; }
+    .section-intro { margin-bottom: 28px; }
+    .section-intro h2 { font-family: var(--font-display); font-size: 1.6rem; font-weight: 600; margin-bottom: 6px; }
+    .section-intro p { font-size: 0.85rem; color: var(--warm-gray); }
+  </style>
+</head>
+<body>
+
+<!-- ═══ PANTALLA BLOQUEADA (intentos fallidos) ═══ -->
+<div id="blocked-screen">
+  <div class="blocked-box">
+    <div class="blocked-icon">🔒</div>
+    <div class="blocked-title">Acceso bloqueado</div>
+    <div class="blocked-sub">Demasiados intentos fallidos. Por seguridad el acceso está temporalmente bloqueado.</div>
+    <div class="blocked-timer" id="blocked-timer"></div>
+  </div>
+</div>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Pixelados <span>by ximelotus</span></div>
+    <div class="login-sub">Gestión de contenido</div>
+
+    <label class="login-label" for="gh-token">Token de GitHub</label>
+    <input type="password" id="gh-token" class="login-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" />
+    <div class="login-hint">Token con permisos de escritura en tu repositorio</div>
+
+    <label class="login-label" for="admin-pwd">Contraseña</label>
+    <input type="password" id="admin-pwd" class="login-input" placeholder="••••••••" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()" />
+
+    <div class="attempts-warning" id="attempts-warning"></div>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Ingresar</button>
+    <div class="login-error" id="login-error">Credenciales incorrectas.</div>
+
+    <div class="github-info">
+      <strong>¿Cómo obtener el token?</strong>
+      1. Ve a <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens/new</a><br>
+      2. Nombre: "Pixelados Admin" · Expiration: 90 days<br>
+      3. Marca ✅ <strong>repo</strong> → Generate token
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PANEL — Solo se inserta en DOM DESPUÉS de auth ═══ -->
+<div id="panel-container"></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════
+//   SEGURIDAD — RATE LIMITING
+// ══════════════════════════════════════
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_MS = 15 * 60 * 1000; // 15 minutos
+
+function getAttempts() {
+  const data = JSON.parse(localStorage.getItem('px_attempts') || '{"count":0,"lockedUntil":0}');
+  return data;
+}
+function setAttempts(count, lockedUntil = 0) {
+  localStorage.setItem('px_attempts', JSON.stringify({ count, lockedUntil }));
+}
+function resetAttempts() {
+  localStorage.removeItem('px_attempts');
+}
+
+function checkLockout() {
+  const { count, lockedUntil } = getAttempts();
+  if (lockedUntil && Date.now() < lockedUntil) {
+    showBlockedScreen(lockedUntil);
+    return true;
+  }
+  if (lockedUntil && Date.now() >= lockedUntil) {
+    resetAttempts();
+  }
+  return false;
+}
+
+function showBlockedScreen(until) {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('blocked-screen').style.display = 'flex';
+  const timer = document.getElementById('blocked-timer');
+  const interval = setInterval(() => {
+    const remaining = Math.max(0, until - Date.now());
+    if (remaining === 0) {
+      clearInterval(interval);
+      resetAttempts();
+      document.getElementById('blocked-screen').style.display = 'none';
+      document.getElementById('login-screen').style.display = 'flex';
+      return;
+    }
+    const mins = Math.floor(remaining / 60000);
+    const secs = Math.floor((remaining % 60000) / 1000);
+    timer.textContent = `Tiempo restante: ${mins}:${secs.toString().padStart(2,'0')}`;
+  }, 1000);
+}
+
+// ══════════════════════════════════════
+//   CONFIG (sin credenciales hardcoded)
+// ══════════════════════════════════════
+const CONFIG = {
+  owner: 'pixeladoslaserena-dev',
+  repo:  'pixeladoslaserena-dev.github.io',
+  file:  'index.html',
+  branch: 'main'
+};
+
+let ghToken = '';
+let currentFileSha = '';
+let currentFileContent = '';
+let currentTab = 'contacto';
+let isAuthenticated = false;
+
+// Hash de contraseña (SHA-256) — NO es texto plano
+// Hash de 'pixelados2025' — cambia desde el panel
+const DEFAULT_PWD_HASH = 'bd1e8ae10a09a62b3780f5bf27ef562f75ea8881d4d9bb4a17c81fd11a52da35';
+
+async function hashPassword(pwd) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function getStoredHash() {
+  return localStorage.getItem('px_pwd_hash') || DEFAULT_PWD_HASH;
+}
+
+// ══════════════════════════════════════
+//   LOGIN SEGURO
+// ══════════════════════════════════════
+async function doLogin() {
+  if (checkLockout()) return;
+
+  const token = document.getElementById('gh-token').value.trim();
+  const pwd = document.getElementById('admin-pwd').value;
+  const err = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+
+  if (!token || !pwd) {
+    err.textContent = 'Completa todos los campos.';
+    err.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Verificando...';
+  err.style.display = 'none';
+
+  // Verificar contraseña con hash
+  const inputHash = await hashPassword(pwd);
+  const storedHash = await getStoredHash();
+
+  if (inputHash !== storedHash) {
+    const { count } = getAttempts();
+    const newCount = count + 1;
+    const remaining = MAX_ATTEMPTS - newCount;
+
+    if (newCount >= MAX_ATTEMPTS) {
+      const lockedUntil = Date.now() + LOCKOUT_MS;
+      setAttempts(newCount, lockedUntil);
+      showBlockedScreen(lockedUntil);
+    } else {
+      setAttempts(newCount);
+      err.textContent = `Contraseña incorrecta. ${remaining} intento${remaining !== 1 ? 's' : ''} restante${remaining !== 1 ? 's' : ''}.`;
+      err.style.display = 'block';
+      document.getElementById('attempts-warning').textContent = remaining <= 2 ? `⚠ Cuidado: quedan ${remaining} intentos antes del bloqueo de 15 minutos.` : '';
+    }
+    btn.disabled = false;
+    btn.textContent = 'Ingresar';
+    return;
+  }
+
+  // Verificar token con GitHub
+  try {
+    const r = await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}`, {
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (!r.ok) throw new Error('Token inválido o sin permisos');
+    const data = await r.json();
+
+    ghToken = token;
+    isAuthenticated = true;
+    resetAttempts();
+
+    document.getElementById('login-screen').style.display = 'none';
+    buildPanel(data.owner.login);
+    await loadFileFromGithub();
+    initDynamicSections();
+
+  } catch(e) {
+    err.textContent = 'Token de GitHub inválido: ' + e.message;
+    err.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Ingresar';
+  }
+}
+
+// ══════════════════════════════════════
+//   CONSTRUIR PANEL EN DOM (solo post-auth)
+// ══════════════════════════════════════
+function buildPanel(username) {
+  document.getElementById('panel-container').innerHTML = `
+    <nav class="admin-nav">
+      <div class="admin-nav-logo">Pixelados <span>by ximelotus</span></div>
+      <div class="admin-nav-right">
+        <span class="admin-user">${username}</span>
+        <a href="https://pixelados.cl" target="_blank" class="nav-btn">Ver web →</a>
+        <button class="nav-btn" onclick="doLogout()">Salir</button>
+      </div>
+    </nav>
+
+    <div class="admin-tabs">
+      <button class="tab-btn active" onclick="switchTab('contacto',this)">📞 Contacto</button>
+      <button class="tab-btn" onclick="switchTab('hero',this)">🏠 Hero</button>
+      <button class="tab-btn" onclick="switchTab('portafolio',this)">📷 Portafolio</button>
+      <button class="tab-btn" onclick="switchTab('servicios',this)">💼 Servicios</button>
+      <button class="tab-btn" onclick="switchTab('precios',this)">💰 Precios</button>
+      <button class="tab-btn" onclick="switchTab('testimonios',this)">⭐ Testimonios</button>
+      <button class="tab-btn" onclick="switchTab('seo',this)">🔍 SEO</button>
+      <button class="tab-btn" onclick="switchTab('ajustes',this)">⚙️ Ajustes</button>
+    </div>
+
+    <div class="admin-body">
+      <div id="github-status-bar" class="github-status"><strong>Conectando...</strong></div>
+
+      <div class="save-bar">
+        <span class="save-bar-left" id="save-bar-text">Edita y guarda los cambios</span>
+        <button class="save-btn" id="save-btn" onclick="saveCurrentTab()">Guardar y publicar</button>
+      </div>
+
+      <div class="tab-panel active" id="tab-contacto">
+        <div class="section-intro"><h2>Contacto</h2><p>WhatsApp, Instagram y correo de tu página.</p></div>
+        <div class="card">
+          <div class="field-row">
+            <div class="field"><label class="field-label">WhatsApp</label><input type="tel" id="c-whatsapp" placeholder="56954000272" /></div>
+            <div class="field"><label class="field-label">Instagram (sin @)</label><input type="text" id="c-instagram" /></div>
+          </div>
+          <div class="field"><label class="field-label">Correo</label><input type="email" id="c-email" /></div>
+          <div class="field"><label class="field-label">Mensaje WhatsApp</label><textarea id="c-wa-msg" rows="2"></textarea></div>
+          <div class="field"><label class="field-label">Badge hero</label><input type="text" id="c-badge" /></div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-hero">
+        <div class="section-intro"><h2>Hero</h2><p>El texto grande y las fotos de la portada.</p></div>
+        <div class="card">
+          <div class="field"><label class="field-label">Texto pequeño</label><input type="text" id="h-eyebrow" /></div>
+          <div class="field"><label class="field-label">Título principal</label><textarea id="h-title" rows="3"></textarea><div class="field-hint">Usa [em]texto[/em] para cursiva dorada</div></div>
+          <div class="field"><label class="field-label">Subtítulo</label><textarea id="h-sub" rows="2"></textarea></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Imágenes</div>
+          <div class="field-row">
+            <div class="field">
+              <label class="field-label">Foto principal</label>
+              <input type="url" id="h-img-main" placeholder="https://res.cloudinary.com/..." oninput="previewImg('h-img-main','prev-main')" />
+              <div class="img-preview-placeholder" id="prev-main">Vista previa</div>
+            </div>
+            <div class="field">
+              <label class="field-label">Foto secundaria</label>
+              <input type="url" id="h-img-accent" placeholder="https://res.cloudinary.com/..." oninput="previewImg('h-img-accent','prev-accent')" />
+              <div class="img-preview-placeholder" id="prev-accent">Vista previa</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-portafolio">
+        <div class="section-intro"><h2>Portafolio</h2><p>Las 6 fotos de tu galería.</p></div>
+        <div class="card"><div class="portfolio-items" id="portfolio-items-container"></div></div>
+      </div>
+
+      <div class="tab-panel" id="tab-servicios">
+        <div class="section-intro"><h2>Servicios</h2></div>
+        <div id="servicios-container"></div>
+      </div>
+
+      <div class="tab-panel" id="tab-precios">
+        <div class="section-intro"><h2>Precios</h2></div>
+        <div id="precios-container"></div>
+      </div>
+
+      <div class="tab-panel" id="tab-testimonios">
+        <div class="section-intro"><h2>Testimonios</h2></div>
+        <div id="testimonios-container"></div>
+      </div>
+
+      <div class="tab-panel" id="tab-seo">
+        <div class="section-intro"><h2>SEO</h2></div>
+        <div class="card">
+          <div class="field"><label class="field-label">Título Google</label><input type="text" id="seo-title" maxlength="70" /></div>
+          <div class="field"><label class="field-label">Descripción Google</label><textarea id="seo-desc" rows="3" maxlength="160"></textarea></div>
+          <div class="field"><label class="field-label">URL canónica</label><input type="url" id="seo-url" /></div>
+          <div class="field">
+            <label class="field-label">Imagen WhatsApp/Redes</label>
+            <input type="url" id="seo-og-img" oninput="previewImg('seo-og-img','prev-og')" />
+            <div class="img-preview-placeholder" id="prev-og">Vista previa</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-ajustes">
+        <div class="section-intro"><h2>Ajustes</h2></div>
+        <div class="card">
+          <div class="card-title">Conexión GitHub</div>
+          <div class="field-row">
+            <div class="field"><label class="field-label">Usuario</label><input type="text" id="cfg-owner" readonly value="${CONFIG.owner}" /></div>
+            <div class="field"><label class="field-label">Repositorio</label><input type="text" id="cfg-repo" readonly value="${CONFIG.repo}" /></div>
+          </div>
+          <div class="field"><label class="field-label">Estado</label><div id="connection-status"></div></div>
+        </div>
+        <div class="danger-zone">
+          <div class="danger-title">⚠ Cambiar contraseña</div>
+          <div class="field-row">
+            <div class="field"><label class="field-label">Nueva contraseña</label><input type="password" id="new-pwd" placeholder="Mínimo 8 caracteres" /></div>
+            <div class="field"><label class="field-label">Confirmar</label><input type="password" id="new-pwd2" /></div>
+          </div>
+          <button class="save-btn" onclick="changePassword()" style="margin-top:12px;">Cambiar contraseña</button>
+        </div>
+      </div>
+
+    </div>
+  `;
+}
+
+function doLogout() {
+  ghToken = '';
+  isAuthenticated = false;
+  document.getElementById('panel-container').innerHTML = '';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('admin-pwd').value = '';
+  document.getElementById('gh-token').value = '';
+}
+
+async function changePassword() {
+  const p1 = document.getElementById('new-pwd').value;
+  const p2 = document.getElementById('new-pwd2').value;
+  if (p1.length < 8) { showToast('Mínimo 8 caracteres', 'error'); return; }
+  if (p1 !== p2) { showToast('Las contraseñas no coinciden', 'error'); return; }
+  const hash = await hashPassword(p1);
+  localStorage.setItem('px_pwd_hash', hash);
+  document.getElementById('new-pwd').value = '';
+  document.getElementById('new-pwd2').value = '';
+  showToast('Contraseña actualizada ✓', 'success');
+}
+
+// ══════════════════════════════════════
+//   GITHUB API
+// ══════════════════════════════════════
+function ghFetch(url, opts = {}) {
+  if (!isAuthenticated) throw new Error('No autenticado');
+  return fetch(url, {
+    ...opts,
+    headers: {
+      'Authorization': `Bearer ${ghToken}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json',
+      ...(opts.headers || {})
+    }
+  });
+}
+
+async function loadFileFromGithub() {
+  const statusBar = document.getElementById('github-status-bar');
+  statusBar.className = 'github-status';
+  statusBar.innerHTML = '<strong>Cargando archivo...</strong>';
+  try {
+    const r = await ghFetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${CONFIG.file}?ref=${CONFIG.branch}`);
+    if (!r.ok) throw new Error('No se pudo leer el archivo');
+    const data = await r.json();
+    currentFileSha = data.sha;
+    currentFileContent = atob(data.content.replace(/\n/g, ''));
+    statusBar.className = 'github-status connected';
+    statusBar.innerHTML = '<strong>✓ Conectado a GitHub</strong> · Los cambios se publican automáticamente.';
+    document.getElementById('connection-status').innerHTML = '<span class="status-badge success">✓ Conectado</span>';
+    loadFieldsFromHTML(currentFileContent);
+  } catch(e) {
+    statusBar.className = 'github-status error';
+    statusBar.innerHTML = `<strong>Error:</strong> ${e.message}`;
+  }
+}
+
+async function saveToGithub(newContent) {
+  if (!isAuthenticated) throw new Error('No autenticado');
+  const encoded = btoa(unescape(encodeURIComponent(newContent)));
+  const r = await ghFetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${CONFIG.file}`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      message: `Admin: ${currentTab} — ${new Date().toLocaleString('es-CL')}`,
+      content: encoded,
+      sha: currentFileSha,
+      branch: CONFIG.branch
+    })
+  });
+  if (!r.ok) { const e = await r.json(); throw new Error(e.message); }
+  const data = await r.json();
+  currentFileSha = data.content.sha;
+  return data;
+}
+
+// ══════════════════════════════════════
+//   LEER CAMPOS DESDE HTML
+// ══════════════════════════════════════
+function extractBgUrl(html, className) {
+  const match = html.match(new RegExp(`\\.${className}\\s*\\{[^}]*background:\\s*url\\(['"]?([^'"\\)]+)['"]?\\)`, 'i'));
+  return match ? match[1].trim() : '';
+}
+
+function loadFieldsFromHTML(html) {
+  const waMatch = html.match(/wa\.me\/([0-9]+)\?text=/);
+  if (waMatch) setVal('c-whatsapp', waMatch[1]);
+  const igMatch = html.match(/instagram\.com\/([a-zA-Z0-9_.]+)/);
+  if (igMatch) setVal('c-instagram', igMatch[1]);
+  const emailMatch = html.match(/mailto:([^"]+)/);
+  if (emailMatch) setVal('c-email', emailMatch[1]);
+  const waMsg = html.match(/wa\.me\/[0-9]+\?text=([^"']+)/);
+  if (waMsg) setVal('c-wa-msg', decodeURIComponent(waMsg[1].replace(/\+/g,' ')));
+  const badgeMatch = html.match(/hero-badge[^>]*>[\s\S]*?<span>([^<]+)<\/span>/);
+  if (badgeMatch) setVal('c-badge', badgeMatch[1].trim());
+  const eyebrowMatch = html.match(/class="hero-eyebrow">([^<]+)<\/span>/);
+  if (eyebrowMatch) setVal('h-eyebrow', eyebrowMatch[1].trim());
+  const h1Match = html.match(/<h1>([^<]*(?:<em>[^<]*<\/em>[^<]*)*)<\/h1>/);
+  if (h1Match) setVal('h-title', h1Match[1].replace(/<em>/g,'[em]').replace(/<\/em>/g,'[/em]').trim());
+  const subMatch = html.match(/class="hero-sub">([^<]+)<\/p>/);
+  if (subMatch) setVal('h-sub', subMatch[1].trim());
+  const mainImg = extractBgUrl(html, 'hero-img-main');
+  if (mainImg) { setVal('h-img-main', mainImg); previewImg('h-img-main','prev-main'); }
+  const accentImg = extractBgUrl(html, 'hero-img-accent');
+  if (accentImg) { setVal('h-img-accent', accentImg); previewImg('h-img-accent','prev-accent'); }
+  const titleMatch = html.match(/<title>([^<]+)<\/title>/);
+  if (titleMatch) setVal('seo-title', titleMatch[1]);
+  const descMatch = html.match(/name="description"\s+content="([^"]+)"/);
+  if (descMatch) setVal('seo-desc', descMatch[1]);
+  const canonMatch = html.match(/rel="canonical"\s+href="([^"]+)"/);
+  if (canonMatch) setVal('seo-url', canonMatch[1]);
+  const ogImgMatch = html.match(/property="og:image"\s+content="([^"]+)"/);
+  if (ogImgMatch) { setVal('seo-og-img', ogImgMatch[1]); previewImg('seo-og-img','prev-og'); }
+  for (let i = 1; i <= 6; i++) {
+    const url = extractBgUrl(html, `p-img-${i}`);
+    if (url) { setVal(`p-img-${i}`, url); previewImg(`p-img-${i}`, `prev-p-${i}`); }
+  }
+}
+
+// ══════════════════════════════════════
+//   GUARDAR
+// ══════════════════════════════════════
+async function saveCurrentTab() {
+  if (!isAuthenticated) { showToast('No autenticado', 'error'); return; }
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Publicando...';
+  try {
+    let html = currentFileContent;
+    html = applyChanges(html, currentTab);
+    await saveToGithub(html);
+    currentFileContent = html;
+    showToast('✓ Publicado correctamente', 'success');
+    document.getElementById('save-bar-text').textContent = '✓ Guardado — ' + new Date().toLocaleTimeString('es-CL');
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Guardar y publicar';
+  }
+}
+
+function applyChanges(html, tab) {
+  if (tab === 'contacto') {
+    const wa = getVal('c-whatsapp'), ig = getVal('c-instagram'), email = getVal('c-email');
+    const msg = encodeURIComponent(getVal('c-wa-msg')), badge = getVal('c-badge');
+    html = html.replace(/wa\.me\/[0-9]+\?text=[^"']*/g, `wa.me/${wa}?text=${msg}`);
+    html = html.replace(/instagram\.com\/[a-zA-Z0-9_.]+/g, `instagram.com/${ig}`);
+    html = html.replace(/@[a-zA-Z0-9_.]+(?=<\/a>)/g, `@${ig}`);
+    html = html.replace(/mailto:[^"]+/g, `mailto:${email}`);
+    html = html.replace(/(<div class="hero-badge">[\s\S]*?<span>)[^<]+(<\/span>)/, `$1${badge}$2`);
+  }
+  if (tab === 'hero') {
+    const eyebrow = getVal('h-eyebrow');
+    const titleRaw = getVal('h-title').replace(/\[em\]/g,'<em>').replace(/\[\/em\]/g,'</em>');
+    const sub = getVal('h-sub'), mainImg = getVal('h-img-main'), accentImg = getVal('h-img-accent');
+    html = html.replace(/class="hero-eyebrow">([^<]+)<\/span>/, `class="hero-eyebrow">${eyebrow}</span>`);
+    html = html.replace(/<h1>[\s\S]*?<\/h1>/, `<h1>${titleRaw}</h1>`);
+    html = html.replace(/class="hero-sub">([^<]+)<\/p>/, `class="hero-sub">${sub}</p>`);
+    if (mainImg) html = html.replace(/(\.hero-img-main\s*\{[^}]*background:\s*url\()['"]?[^'")\s]+['"]?/, `$1'${mainImg}'`);
+    if (accentImg) html = html.replace(/(\.hero-img-accent\s*\{[^}]*background:\s*url\()['"]?[^'")\s]+['"]?/, `$1'${accentImg}'`);
+  }
+  if (tab === 'portafolio') {
+    for (let i = 1; i <= 6; i++) {
+      const url = getVal(`p-img-${i}`), label = getVal(`p-label-${i}`);
+      if (url) html = html.replace(new RegExp(`(\\.p-img-${i}\\s*\\{[^}]*background:\\s*url\\()['"]?[^'"\\)\\s]+['"]?`), `$1'${url}'`);
+      if (label) html = html.replace(new RegExp(`(<div class="p-item">\\s*<div class="p-img-${i}"></div>\\s*<div class="p-overlay"><span class="p-overlay-text">)[^<]+(<\\/span>)`), `$1${label}$2`);
+    }
+  }
+  if (tab === 'testimonios') {
+    let idx = 0;
+    html = html.replace(/class="testi-text">([^<]+)<\/p>/g, (m, old) => { idx++; return `class="testi-text">${getVal(`t${idx}-text`) || old}</p>`; });
+    idx = 0;
+    html = html.replace(/class="testi-name">([^<]+)<\/div>/g, (m, old) => { idx++; return `class="testi-name">${getVal(`t${idx}-name`) || old}</div>`; });
+    idx = 0;
+    html = html.replace(/class="testi-biz">([^<]+)<\/div>/g, (m, old) => { idx++; return `class="testi-biz">${getVal(`t${idx}-biz`) || old}</div>`; });
+  }
+  if (tab === 'servicios') {
+    let idx = 0;
+    html = html.replace(/class="service-title">([^<]+)<\/div>/g, (m, old) => { idx++; return `class="service-title">${getVal(`sv${idx}-title`) || old}</div>`; });
+    idx = 0;
+    html = html.replace(/class="service-desc">([^<]+)<\/p>/g, (m, old) => { idx++; return `class="service-desc">${getVal(`sv${idx}-desc`) || old}</p>`; });
+  }
+  if (tab === 'seo') {
+    const title = getVal('seo-title'), desc = getVal('seo-desc'), url = getVal('seo-url'), ogImg = getVal('seo-og-img');
+    if (title) html = html.replace(/<title>[^<]+<\/title>/, `<title>${title}</title>`);
+    if (desc) html = html.replace(/(name="description"\s+content=")[^"]+(")/g, `$1${desc}$2`);
+    if (url) { html = html.replace(/(rel="canonical"\s+href=")[^"]+(")/g, `$1${url}$2`); html = html.replace(/(property="og:url"\s+content=")[^"]+(")/g, `$1${url}$2`); }
+    if (ogImg) html = html.replace(/(property="og:image"\s+content=")[^"]+(")/g, `$1${ogImg}$2`);
+  }
+  return html;
+}
+
+// ══════════════════════════════════════
+//   SECCIONES DINÁMICAS
+// ══════════════════════════════════════
+function initDynamicSections() {
+  const pc = document.getElementById('portfolio-items-container');
+  const labels = ['Café de especialidad','Barra de espresso','Coctelería artesanal','Pastelería fina','Brunch editorial','Plato principal'];
+  pc.innerHTML = '';
+  for (let i = 1; i <= 6; i++) {
+    pc.innerHTML += `<div class="portfolio-item"><div class="portfolio-item-num">Foto ${i}</div>
+      <div class="field"><label class="field-label">URL imagen</label><input type="url" id="p-img-${i}" oninput="previewImg('p-img-${i}','prev-p-${i}')" /></div>
+      <div class="field"><label class="field-label">Etiqueta</label><input type="text" id="p-label-${i}" placeholder="${labels[i-1]}" /></div>
+      <div class="img-preview-placeholder" id="prev-p-${i}">Vista previa</div></div>`;
+  }
+  const sc = document.getElementById('servicios-container');
+  const svcs = ['Fotografía de productos','Fotografía para cafeterías','Contenido para redes','Menú y delivery'];
+  sc.innerHTML = '';
+  for (let i = 1; i <= 4; i++) {
+    sc.innerHTML += `<div class="item-group"><div class="item-group-title">Servicio ${i}</div>
+      <div class="field"><label class="field-label">Título</label><input type="text" id="sv${i}-title" placeholder="${svcs[i-1]}" /></div>
+      <div class="field"><label class="field-label">Descripción</label><textarea id="sv${i}-desc" rows="2"></textarea></div></div>`;
+  }
+  const prc = document.getElementById('precios-container');
+  const packs = ['Pack Esencial','Pack Completo','Pack Premium'];
+  prc.innerHTML = '';
+  for (let i = 1; i <= 3; i++) {
+    prc.innerHTML += `<div class="item-group"><div class="item-group-title">Pack ${i}</div>
+      <div class="field-row">
+        <div class="field"><label class="field-label">Nombre</label><input type="text" id="pk${i}-name" placeholder="${packs[i-1]}" /></div>
+        <div class="field"><label class="field-label">Precio</label><input type="text" id="pk${i}-price" placeholder="$XX.000" /></div>
+      </div>
+      <div class="field"><label class="field-label">Descripción</label><textarea id="pk${i}-desc" rows="2"></textarea></div></div>`;
+  }
+  const tc = document.getElementById('testimonios-container');
+  tc.innerHTML = '';
+  for (let i = 1; i <= 3; i++) {
+    tc.innerHTML += `<div class="item-group"><div class="item-group-title">Testimonio ${i}</div>
+      <div class="field"><label class="field-label">Texto</label><textarea id="t${i}-text" rows="3"></textarea></div>
+      <div class="field-row">
+        <div class="field"><label class="field-label">Nombre</label><input type="text" id="t${i}-name" /></div>
+        <div class="field"><label class="field-label">Negocio · Ciudad</label><input type="text" id="t${i}-biz" /></div>
+      </div></div>`;
+  }
+  loadFieldsFromHTML(currentFileContent);
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.add('active');
+  btn.classList.add('active');
+  currentTab = name;
+}
+
+function previewImg(inputId, previewId) {
+  const url = document.getElementById(inputId)?.value;
+  const prev = document.getElementById(previewId);
+  if (!prev) return;
+  if (url && url.startsWith('http')) {
+    prev.outerHTML = `<img id="${previewId}" src="${url}" style="width:100%;height:180px;object-fit:cover;border:1px solid var(--accent-light);margin-top:8px;" onerror="this.outerHTML='<div class=img-preview-placeholder id=${previewId}>URL no válida</div>'" />`;
+  }
+}
+
+function getVal(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+function setVal(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
+
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+// Verificar bloqueo al cargar
+window.addEventListener('load', () => { checkLockout(); });
+document.getElementById('admin-pwd').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>
