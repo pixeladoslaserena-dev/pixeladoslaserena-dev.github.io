@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /gestion-px.html
+
+Sitemap: https://pixelados.cl/sitemap.xml
