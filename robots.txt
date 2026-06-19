@@ -1,3 +1,0 @@
-User-agent: *
-Allow: /
-Sitemap: https://pixeladoslaserena.github.io/sitemap.xml
