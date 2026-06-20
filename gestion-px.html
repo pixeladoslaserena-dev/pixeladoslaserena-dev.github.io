@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestión · Pixelados</title>
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />
+  <meta name="googlebot" content="noindex, nofollow" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --cream: #FAF8F4; --cream-dark: #F2EDE5; --charcoal: #1C1C1C;
+      --warm-gray: #8A8480; --accent: #C4956A; --accent-light: #E8D5BC;
+      --white: #FFFFFF; --green: #2E7D32; --green-light: #E8F5E9;
+      --red: #C62828; --red-light: #FFEBEE; --blue: #1565C0; --blue-light: #E3F2FD;
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-body); background: var(--cream-dark); color: var(--charcoal); min-height: 100vh; }
+
+    /* ── LOGIN ── */
+    #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+    #panel-screen { display: none; }
+
+    .login-box { background: var(--white); border: 1px solid var(--accent-light); padding: 48px 40px; width: 100%; max-width: 420px; text-align: center; }
+    .login-logo { font-family: var(--font-display); font-size: 2rem; font-weight: 600; margin-bottom: 4px; }
+    .login-logo span { color: var(--accent); }
+    .login-sub { font-size: 0.75rem; color: var(--warm-gray); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 36px; }
+    .login-label { display: block; text-align: left; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--warm-gray); margin-bottom: 8px; margin-top: 16px; }
+    .login-input { width: 100%; padding: 12px 16px; border: 1px solid var(--accent-light); background: var(--cream); font-family: var(--font-body); font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
+    .login-input:focus { border-color: var(--accent); }
+    .login-hint { font-size: 0.72rem; color: var(--warm-gray); text-align: left; margin-top: 6px; margin-bottom: 8px; }
+    .login-btn { width: 100%; padding: 14px; background: var(--charcoal); color: var(--white); border: none; font-family: var(--font-body); font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: background 0.3s; margin-top: 16px; }
+    .login-btn:hover { background: var(--accent); }
+    .login-btn:disabled { background: var(--warm-gray); cursor: not-allowed; }
+    .login-error { color: var(--red); font-size: 0.82rem; margin-top: 12px; display: none; padding: 10px; background: var(--red-light); }
+    .info-box { background: var(--blue-light); border-left: 3px solid var(--blue); padding: 12px 16px; text-align: left; font-size: 0.78rem; color: var(--blue); margin-top: 20px; line-height: 1.6; }
+    .info-box a { color: var(--blue); font-weight: 500; }
+
+    /* ── NAV ── */
+    .admin-nav { background: var(--charcoal); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 100; }
+    .admin-nav-logo { font-family: var(--font-display); font-size: 1.2rem; color: var(--white); }
+    .admin-nav-logo span { color: var(--accent); }
+    .admin-nav-right { display: flex; align-items: center; gap: 16px; }
+    .admin-user { font-size: 0.72rem; color: rgba(255,255,255,0.5); }
+    .nav-btn { padding: 8px 16px; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.6); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; }
+    .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── TABS ── */
+    .admin-tabs { background: var(--white); border-bottom: 1px solid var(--accent-light); display: flex; overflow-x: auto; }
+    .tab-btn { padding: 16px 24px; font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; background: none; border: none; cursor: pointer; color: var(--warm-gray); border-bottom: 2px solid transparent; white-space: nowrap; transition: all 0.2s; }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-btn:hover { color: var(--charcoal); }
+
+    /* ── BODY ── */
+    .admin-body { max-width: 900px; margin: 0 auto; padding: 32px 24px 80px; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── CARDS ── */
+    .card { background: var(--white); border: 1px solid var(--accent-light); padding: 28px; margin-bottom: 20px; }
+    .card-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; }
+    .card-desc { font-size: 0.78rem; color: var(--warm-gray); margin-bottom: 24px; }
+    .field { margin-bottom: 18px; }
+    .field:last-child { margin-bottom: 0; }
+    .field-label { display: block; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--warm-gray); margin-bottom: 7px; font-weight: 500; }
+    .field-hint { font-size: 0.7rem; color: var(--accent); margin-top: 4px; }
+    input[type="text"], input[type="tel"], input[type="email"], input[type="url"], input[type="password"], textarea {
+      width: 100%; padding: 10px 14px; border: 1px solid var(--accent-light); background: var(--cream);
+      font-family: var(--font-body); font-size: 0.9rem; color: var(--charcoal); outline: none; transition: border-color 0.2s; resize: vertical;
+    }
+    input:focus, textarea:focus { border-color: var(--accent); background: var(--white); }
+    textarea { min-height: 80px; line-height: 1.6; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media(max-width:600px) { .field-row { grid-template-columns: 1fr; } }
+    .img-placeholder { width: 100%; height: 160px; background: var(--cream-dark); border: 1px dashed var(--accent-light); display: flex; align-items: center; justify-content: center; color: var(--warm-gray); font-size: 0.8rem; margin-top: 8px; }
+    .portfolio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media(max-width:600px) { .portfolio-grid { grid-template-columns: 1fr; } }
+    .portfolio-item { border: 1px solid var(--accent-light); background: var(--cream); padding: 16px; }
+    .item-num { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; font-weight: 500; }
+    .item-group { border: 1px solid var(--accent-light); padding: 20px; margin-bottom: 14px; background: var(--cream); }
+    .item-group-title { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; font-weight: 500; }
+
+    /* ── SAVE BAR ── */
+    .save-bar { position: sticky; top: 60px; z-index: 50; background: var(--cream-dark); padding: 12px 0; border-bottom: 1px solid var(--accent-light); margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between; }
+    .save-bar-left { font-size: 0.78rem; color: var(--warm-gray); }
+    .save-btn { padding: 10px 28px; background: var(--accent); color: var(--white); border: none; font-family: var(--font-body); font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: background 0.3s; }
+    .save-btn:hover { background: var(--charcoal); }
+    .save-btn:disabled { background: var(--accent-light); cursor: not-allowed; }
+
+    /* ── STATUS ── */
+    .gh-status { padding: 14px 20px; margin-bottom: 24px; font-size: 0.82rem; border: 1px solid #BBDEFB; background: var(--blue-light); color: var(--blue); }
+    .gh-status.ok { background: var(--green-light); border-color: #C8E6C9; color: var(--green); }
+    .gh-status.err { background: var(--red-light); border-color: #FFCDD2; color: var(--red); }
+    .gh-status strong { display: block; margin-bottom: 2px; }
+
+    /* ── TOAST ── */
+    .toast { position: fixed; bottom: 28px; right: 28px; padding: 14px 20px; background: var(--charcoal); color: var(--white); font-size: 0.85rem; border-left: 4px solid var(--accent); opacity: 0; transform: translateY(10px); transition: all 0.3s; pointer-events: none; z-index: 999; max-width: 320px; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.ok { border-left-color: #4CAF50; }
+    .toast.err { border-left-color: var(--red); }
+
+    .loader { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 6px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .section-intro { margin-bottom: 24px; }
+    .section-intro h2 { font-family: var(--font-display); font-size: 1.6rem; font-weight: 600; margin-bottom: 4px; }
+    .section-intro p { font-size: 0.85rem; color: var(--warm-gray); }
+  </style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Pixelados <span>by ximelotus</span></div>
+    <div class="login-sub">Panel de gestión</div>
+
+    <label class="login-label" for="inp-token">Token de GitHub</label>
+    <input type="password" id="inp-token" class="login-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" />
+    <div class="login-hint">Token con permisos <strong>repo</strong> en tu repositorio</div>
+
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Ingresar →</button>
+    <div class="login-error" id="login-error"></div>
+
+    <div class="info-box" style="margin-top:20px;">
+      <strong>¿Cómo obtener el token?</strong>
+      1. Ve a <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens/new</a><br>
+      2. Nombre: Pixelados · Expiration: 90 days<br>
+      3. Marca ✅ <strong>repo</strong> → Generate token<br><br>
+      <strong>Seguridad:</strong> Cloudflare Access protegerá esta página.
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PANEL ═══ -->
+<div id="panel-screen">
+  <nav class="admin-nav">
+    <div class="admin-nav-logo">Pixelados <span>by ximelotus</span></div>
+    <div class="admin-nav-right">
+      <span class="admin-user" id="gh-user"></span>
+      <a href="https://pixelados.cl" target="_blank" class="nav-btn">Ver web →</a>
+      <button class="nav-btn" onclick="doLogout()">Salir</button>
+    </div>
+  </nav>
+
+  <div class="admin-tabs">
+    <button class="tab-btn active" onclick="switchTab('contacto',this)">📞 Contacto</button>
+    <button class="tab-btn" onclick="switchTab('hero',this)">🏠 Hero</button>
+    <button class="tab-btn" onclick="switchTab('portafolio',this)">📷 Portafolio</button>
+    <button class="tab-btn" onclick="switchTab('servicios',this)">💼 Servicios</button>
+    <button class="tab-btn" onclick="switchTab('precios',this)">💰 Precios</button>
+    <button class="tab-btn" onclick="switchTab('testimonios',this)">⭐ Testimonios</button>
+    <button class="tab-btn" onclick="switchTab('seo',this)">🔍 SEO</button>
+  </div>
+
+  <div class="admin-body">
+    <div class="gh-status" id="gh-status"><strong>Conectando con GitHub...</strong></div>
+
+    <div class="save-bar">
+      <span class="save-bar-left" id="save-status">Edita y guarda los cambios</span>
+      <button class="save-btn" id="save-btn" onclick="guardar()">Guardar y publicar</button>
+    </div>
+
+    <!-- CONTACTO -->
+    <div class="tab-panel active" id="tab-contacto">
+      <div class="section-intro"><h2>Contacto</h2><p>WhatsApp, Instagram y correo que aparecen en tu página.</p></div>
+      <div class="card">
+        <div class="field-row">
+          <div class="field"><label class="field-label">WhatsApp (con código país)</label><input type="tel" id="c-wa" placeholder="56954000272" /></div>
+          <div class="field"><label class="field-label">Instagram (sin @)</label><input type="text" id="c-ig" placeholder="ximelotus" /></div>
+        </div>
+        <div class="field"><label class="field-label">Correo electrónico</label><input type="email" id="c-email" /></div>
+        <div class="field"><label class="field-label">Mensaje automático WhatsApp</label><textarea id="c-wa-msg" rows="2"></textarea></div>
+        <div class="field"><label class="field-label">Texto del badge (ej: Disponible para sesiones)</label><input type="text" id="c-badge" /></div>
+      </div>
+    </div>
+
+    <!-- HERO -->
+    <div class="tab-panel" id="tab-hero">
+      <div class="section-intro"><h2>Hero — Portada</h2><p>El texto principal y las fotos de entrada.</p></div>
+      <div class="card">
+        <div class="field"><label class="field-label">Texto pequeño sobre el título</label><input type="text" id="h-eyebrow" /></div>
+        <div class="field"><label class="field-label">Título principal</label><textarea id="h-title" rows="3"></textarea><div class="field-hint">Usa [em]texto[/em] para cursiva dorada</div></div>
+        <div class="field"><label class="field-label">Subtítulo</label><textarea id="h-sub" rows="2"></textarea></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Imágenes del hero</div>
+        <div class="card-desc">URLs de Cloudinary. Tamaño recomendado: 900×700px</div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Foto principal (grande)</label>
+            <input type="url" id="h-img-main" placeholder="https://res.cloudinary.com/..." oninput="preview('h-img-main','p-main')" />
+            <div class="img-placeholder" id="p-main">Vista previa</div>
+          </div>
+          <div class="field">
+            <label class="field-label">Foto secundaria (pequeña)</label>
+            <input type="url" id="h-img-accent" placeholder="https://res.cloudinary.com/..." oninput="preview('h-img-accent','p-accent')" />
+            <div class="img-placeholder" id="p-accent">Vista previa</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Foto "Sobre mí"</div>
+        <div class="card-desc">Tu foto en la sección de presentación al final de la página.</div>
+        <div class="field">
+          <label class="field-label">URL de tu foto</label>
+          <input type="url" id="h-img-sobre" placeholder="https://res.cloudinary.com/..." oninput="preview('h-img-sobre','p-sobre')" />
+          <div class="img-placeholder" id="p-sobre">Vista previa</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PORTAFOLIO -->
+    <div class="tab-panel" id="tab-portafolio">
+      <div class="section-intro"><h2>Portafolio</h2><p>Las 6 fotos de tu galería de trabajos.</p></div>
+      <div class="card">
+        <div class="card-desc">Tamaño recomendado: 800×600px mínimo. Usa el optimizador antes de subir a Cloudinary.</div>
+        <div class="portfolio-grid" id="portfolio-grid"></div>
+      </div>
+    </div>
+
+    <!-- SERVICIOS -->
+    <div class="tab-panel" id="tab-servicios">
+      <div class="section-intro"><h2>Servicios</h2><p>Los 4 servicios que ofreces.</p></div>
+      <div id="servicios-wrap"></div>
+    </div>
+
+    <!-- PRECIOS -->
+    <div class="tab-panel" id="tab-precios">
+      <div class="section-intro"><h2>Precios</h2><p>Los 3 packs de servicios.</p></div>
+      <div id="precios-wrap"></div>
+    </div>
+
+    <!-- TESTIMONIOS -->
+    <div class="tab-panel" id="tab-testimonios">
+      <div class="section-intro"><h2>Testimonios</h2><p>Los 3 comentarios de clientes.</p></div>
+      <div id="testimonios-wrap"></div>
+    </div>
+
+    <!-- SEO -->
+    <div class="tab-panel" id="tab-seo">
+      <div class="section-intro"><h2>SEO</h2><p>Textos que aparecen en Google y al compartir por WhatsApp.</p></div>
+      <div class="card">
+        <div class="field"><label class="field-label">Título (Google)</label><input type="text" id="seo-title" maxlength="70" /><div class="field-hint">Máximo 60 caracteres</div></div>
+        <div class="field"><label class="field-label">Descripción (Google)</label><textarea id="seo-desc" rows="3" maxlength="160"></textarea><div class="field-hint">Máximo 155 caracteres</div></div>
+        <div class="field"><label class="field-label">URL canónica</label><input type="url" id="seo-url" placeholder="https://pixelados.cl" /></div>
+        <div class="field">
+          <label class="field-label">Imagen para WhatsApp/Redes (1200×630px)</label>
+          <input type="url" id="seo-og" placeholder="https://res.cloudinary.com/..." oninput="preview('seo-og','p-og')" />
+          <div class="img-placeholder" id="p-og">Vista previa</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════
+//   CONFIGURACIÓN
+// ══════════════════════════════════════
+const CFG = {
+  owner:  'pixeladoslaserena-dev',
+  repo:   'pixeladoslaserena-dev.github.io',
+  file:   'index.html',
+  branch: 'main'
+};
+
+let TOKEN = '';
+let fileSha = '';
+let fileHTML = '';
+let activeTab = 'contacto';
+
+// ══════════════════════════════════════
+//   LOGIN — solo verifica token con GitHub
+// ══════════════════════════════════════
+async function doLogin() {
+  const token = document.getElementById('inp-token').value.trim();
+  const err   = document.getElementById('login-error');
+  const btn   = document.getElementById('login-btn');
+
+  err.style.display = 'none';
+
+  if (!token) {
+    err.textContent = 'Ingresa tu token de GitHub.';
+    err.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span>Verificando...';
+
+  try {
+    const r = await fetch(`https://api.github.com/repos/${CFG.owner}/${CFG.repo}`, {
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (!r.ok) throw new Error('Token inválido o sin permisos sobre el repositorio.');
+    const data = await r.json();
+
+    TOKEN = token;
+    document.getElementById('gh-user').textContent = data.owner.login;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('panel-screen').style.display  = 'block';
+
+    buildDynamic();
+    await cargarArchivo();
+
+  } catch(e) {
+    err.textContent = e.message;
+    err.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Ingresar →';
+  }
+}
+
+function doLogout() {
+  TOKEN = ''; fileSha = ''; fileHTML = '';
+  document.getElementById('panel-screen').style.display  = 'none';
+  document.getElementById('login-screen').style.display  = 'flex';
+  document.getElementById('inp-token').value = '';
+}
+
+// ══════════════════════════════════════
+//   GITHUB — cargar y guardar
+// ══════════════════════════════════════
+async function cargarArchivo() {
+  const st = document.getElementById('gh-status');
+  st.className = 'gh-status';
+  st.innerHTML = '<strong>Cargando archivo desde GitHub...</strong>';
+  try {
+    const r = await fetch(`https://api.github.com/repos/${CFG.owner}/${CFG.repo}/contents/${CFG.file}?ref=${CFG.branch}&t=${Date.now()}`, {
+      headers: { 'Authorization': `Bearer ${TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (!r.ok) throw new Error('No se pudo leer el archivo.');
+    const d = await r.json();
+    fileSha  = d.sha;
+    fileHTML = decodeURIComponent(escape(atob(d.content.replace(/\n/g,''))));
+    st.className = 'gh-status ok';
+    st.innerHTML = '<strong>✓ Conectado</strong> · Los cambios se publican al guardar.';
+    rellenarCampos();
+  } catch(e) {
+    st.className = 'gh-status err';
+    st.innerHTML = `<strong>Error al cargar:</strong> ${e.message}`;
+  }
+}
+
+async function guardar() {
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span>Publicando...';
+  try {
+    const nuevo = aplicarCambios(fileHTML, activeTab);
+    const encoded = btoa(unescape(encodeURIComponent(nuevo)));
+    const r = await fetch(`https://api.github.com/repos/${CFG.owner}/${CFG.repo}/contents/${CFG.file}`, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${TOKEN}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: `Panel: ${activeTab} — ${new Date().toLocaleString('es-CL')}`, content: encoded, sha: fileSha, branch: CFG.branch })
+    });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.message); }
+    const d = await r.json();
+    fileSha  = d.content.sha;
+    fileHTML = nuevo;
+    toast('✓ Publicado correctamente', 'ok');
+    document.getElementById('save-status').textContent = '✓ Guardado · ' + new Date().toLocaleTimeString('es-CL');
+  } catch(e) {
+    toast('Error: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Guardar y publicar';
+  }
+}
+
+// ══════════════════════════════════════
+//   LEER HTML → campos
+// ══════════════════════════════════════
+function bgUrl(html, cls) {
+  const m = html.match(new RegExp(`\\.${cls}\\s*\\{[^}]*background:\\s*url\\(['"]?([^'"\\)]+)['"]?\\)`, 'i'));
+  return m ? m[1].trim() : '';
+}
+
+function rellenarCampos() {
+  const h = fileHTML;
+  // Contacto
+  const waM = h.match(/wa\.me\/([0-9]+)\?text=/);          if (waM) set('c-wa', waM[1]);
+  const igM = h.match(/instagram\.com\/([a-zA-Z0-9_.]+)/); if (igM) set('c-ig', igM[1]);
+  const emM = h.match(/mailto:([^"]+)/);                    if (emM) set('c-email', emM[1]);
+  const wmM = h.match(/wa\.me\/[0-9]+\?text=([^"']+)/);    if (wmM) set('c-wa-msg', decodeURIComponent(wmM[1].replace(/\+/g,' ')));
+  const bdM = h.match(/hero-badge[^>]*>[\s\S]*?<span>([^<]+)<\/span>/); if (bdM) set('c-badge', bdM[1].trim());
+  // Hero
+  const eyM = h.match(/class="hero-eyebrow">([^<]+)<\/span>/); if (eyM) set('h-eyebrow', eyM[1].trim());
+  const h1M = h.match(/<h1>([\s\S]*?)<\/h1>/);               if (h1M) set('h-title', h1M[1].replace(/<em>/g,'[em]').replace(/<\/em>/g,'[/em]').trim());
+  const sbM = h.match(/class="hero-sub">([^<]+)<\/p>/);       if (sbM) set('h-sub', sbM[1].trim());
+  const mi = bgUrl(h,'hero-img-main');   if (mi) { set('h-img-main', mi);   preview('h-img-main','p-main'); }
+  const ai = bgUrl(h,'hero-img-accent'); if (ai) { set('h-img-accent', ai); preview('h-img-accent','p-accent'); }
+  const si = bgUrl(h,'sobre-mi-photo');  if (si) { set('h-img-sobre', si);  preview('h-img-sobre','p-sobre'); }
+  // Portafolio
+  for (let i=1;i<=6;i++) { const u=bgUrl(h,`p-img-${i}`); if(u){set(`p-img-${i}`,u);preview(`p-img-${i}`,`pp-${i}`);} }
+  // SEO
+  const tiM = h.match(/<title>([^<]+)<\/title>/);                       if (tiM) set('seo-title', tiM[1]);
+  const deM = h.match(/name="description"\s+content="([^"]+)"/);        if (deM) set('seo-desc', deM[1]);
+  const caM = h.match(/rel="canonical"\s+href="([^"]+)"/);              if (caM) set('seo-url', caM[1]);
+  const ogM = h.match(/property="og:image"\s+content="([^"]+)"/);       if (ogM) { set('seo-og', ogM[1]); preview('seo-og','p-og'); }
+}
+
+// ══════════════════════════════════════
+//   APLICAR CAMBIOS → HTML
+// ══════════════════════════════════════
+function aplicarCambios(h, tab) {
+  if (tab === 'contacto') {
+    const wa=get('c-wa'), ig=get('c-ig'), em=get('c-email'), msg=encodeURIComponent(get('c-wa-msg')), bd=get('c-badge');
+    h = h.replace(/wa\.me\/[0-9]+\?text=[^"']*/g, `wa.me/${wa}?text=${msg}`);
+    h = h.replace(/instagram\.com\/[a-zA-Z0-9_.]+/g, `instagram.com/${ig}`);
+    h = h.replace(/@[a-zA-Z0-9_.]+(?=<\/a>)/g, `@${ig}`);
+    h = h.replace(/mailto:[^"]+/g, `mailto:${em}`);
+    h = h.replace(/(<div class="hero-badge">[\s\S]*?<span>)[^<]+(<\/span>)/, `$1${bd}$2`);
+  }
+  if (tab === 'hero') {
+    const ey=get('h-eyebrow'), ti=get('h-title').replace(/\[em\]/g,'<em>').replace(/\[\/em\]/g,'</em>'), sb=get('h-sub');
+    const mi=get('h-img-main'), ai=get('h-img-accent'), so=get('h-img-sobre');
+    h = h.replace(/class="hero-eyebrow">([^<]+)<\/span>/, `class="hero-eyebrow">${ey}</span>`);
+    h = h.replace(/<h1>[\s\S]*?<\/h1>/, `<h1>${ti}</h1>`);
+    h = h.replace(/class="hero-sub">([^<]+)<\/p>/, `class="hero-sub">${sb}</p>`);
+    if (mi) h = h.replace(/(\.hero-img-main\s*\{[^}]*background:\s*url\()['"]?[^'")\s]+['"]?/, `$1'${mi}'`);
+    if (ai) h = h.replace(/(\.hero-img-accent\s*\{[^}]*background:\s*url\()['"]?[^'")\s]+['"]?/, `$1'${ai}'`);
+    if (so) h = h.replace(/(\.sobre-mi-photo\s*\{[^}]*background:\s*url\()['"]?[^'")\s]+['"]?/, `$1'${so}'`);
+  }
+  if (tab === 'portafolio') {
+    for (let i=1;i<=6;i++) {
+      const u=get(`p-img-${i}`), lb=get(`p-lbl-${i}`);
+      if (u) h = h.replace(new RegExp(`(\\.p-img-${i}\\s*\\{[^}]*background:\\s*url\\()['"]?[^'"\\)\\s]+['"]?`), `$1'${u}'`);
+      if (lb) h = h.replace(new RegExp(`(<div class="p-item">\\s*<div class="p-img-${i}"></div>\\s*<div class="p-overlay"><span class="p-overlay-text">)[^<]+(<\\/span>)`), `$1${lb}$2`);
+    }
+  }
+  if (tab === 'testimonios') {
+    let n=0; h=h.replace(/class="testi-text">([^<]+)<\/p>/g,   (m,o)=>{n++;return `class="testi-text">${get(`t${n}-txt`)||o}</p>`;});
+    n=0;     h=h.replace(/class="testi-name">([^<]+)<\/div>/g, (m,o)=>{n++;return `class="testi-name">${get(`t${n}-nom`)||o}</div>`;});
+    n=0;     h=h.replace(/class="testi-biz">([^<]+)<\/div>/g,  (m,o)=>{n++;return `class="testi-biz">${get(`t${n}-biz`)||o}</div>`;});
+  }
+  if (tab === 'servicios') {
+    let n=0; h=h.replace(/class="service-title">([^<]+)<\/div>/g,(m,o)=>{n++;return `class="service-title">${get(`sv${n}-tit`)||o}</div>`;});
+    n=0;     h=h.replace(/class="service-desc">([^<]+)<\/p>/g,   (m,o)=>{n++;return `class="service-desc">${get(`sv${n}-des`)||o}</p>`;});
+  }
+  if (tab === 'precios') {
+    let n=0; h=h.replace(/class="pack-name">([^<]+)<\/div>/g,  (m,o)=>{n++;return `class="pack-name">${get(`pk${n}-nom`)||o}</div>`;});
+    n=0;     h=h.replace(/class="pack-price">([^<]+)<\/div>/g, (m,o)=>{n++;return `class="pack-price">${get(`pk${n}-pre`)||o}</div>`;});
+    n=0;     h=h.replace(/class="pack-desc">([^<]+)<\/p>/g,    (m,o)=>{n++;return `class="pack-desc">${get(`pk${n}-des`)||o}</p>`;});
+  }
+  if (tab === 'seo') {
+    const ti=get('seo-title'), de=get('seo-desc'), ur=get('seo-url'), og=get('seo-og');
+    if (ti) h=h.replace(/<title>[^<]+<\/title>/,`<title>${ti}</title>`);
+    if (de) h=h.replace(/(name="description"\s+content=")[^"]+(")/g,`$1${de}$2`);
+    if (ur) { h=h.replace(/(rel="canonical"\s+href=")[^"]+(")/g,`$1${ur}$2`); h=h.replace(/(property="og:url"\s+content=")[^"]+(")/g,`$1${ur}$2`); }
+    if (og) h=h.replace(/(property="og:image"\s+content=")[^"]+(")/g,`$1${og}$2`);
+  }
+  return h;
+}
+
+// ══════════════════════════════════════
+//   SECCIONES DINÁMICAS
+// ══════════════════════════════════════
+function buildDynamic() {
+  // Portafolio
+  const pg = document.getElementById('portfolio-grid');
+  const plabels = ['Café de especialidad','Barra de espresso','Coctelería','Pastelería','Brunch','Plato principal'];
+  pg.innerHTML = '';
+  for (let i=1;i<=6;i++) pg.innerHTML += `
+    <div class="portfolio-item">
+      <div class="item-num">Foto ${i}</div>
+      <div class="field"><label class="field-label">URL imagen</label>
+        <input type="url" id="p-img-${i}" placeholder="https://res.cloudinary.com/..." oninput="preview('p-img-${i}','pp-${i}')" /></div>
+      <div class="field"><label class="field-label">Etiqueta</label>
+        <input type="text" id="p-lbl-${i}" placeholder="${plabels[i-1]}" /></div>
+      <div class="img-placeholder" id="pp-${i}">Vista previa</div>
+    </div>`;
+
+  // Servicios
+  const sw = document.getElementById('servicios-wrap');
+  const snoms = ['Fotografía de productos','Fotografía para cafeterías','Contenido para redes','Menú y delivery'];
+  sw.innerHTML = '';
+  for (let i=1;i<=4;i++) sw.innerHTML += `
+    <div class="item-group"><div class="item-group-title">Servicio ${i}</div>
+      <div class="field"><label class="field-label">Título</label><input type="text" id="sv${i}-tit" placeholder="${snoms[i-1]}" /></div>
+      <div class="field"><label class="field-label">Descripción</label><textarea id="sv${i}-des" rows="2"></textarea></div>
+    </div>`;
+
+  // Precios
+  const pw = document.getElementById('precios-wrap');
+  const pnoms = ['Pack Esencial','Pack Completo','Pack Premium'];
+  pw.innerHTML = '';
+  for (let i=1;i<=3;i++) pw.innerHTML += `
+    <div class="item-group"><div class="item-group-title">Pack ${i}</div>
+      <div class="field-row">
+        <div class="field"><label class="field-label">Nombre</label><input type="text" id="pk${i}-nom" placeholder="${pnoms[i-1]}" /></div>
+        <div class="field"><label class="field-label">Precio</label><input type="text" id="pk${i}-pre" placeholder="$XX.000" /></div>
+      </div>
+      <div class="field"><label class="field-label">Descripción</label><textarea id="pk${i}-des" rows="2"></textarea></div>
+    </div>`;
+
+  // Testimonios
+  const tw = document.getElementById('testimonios-wrap');
+  tw.innerHTML = '';
+  for (let i=1;i<=3;i++) tw.innerHTML += `
+    <div class="item-group"><div class="item-group-title">Testimonio ${i}</div>
+      <div class="field"><label class="field-label">Texto</label><textarea id="t${i}-txt" rows="3"></textarea></div>
+      <div class="field-row">
+        <div class="field"><label class="field-label">Nombre</label><input type="text" id="t${i}-nom" /></div>
+        <div class="field"><label class="field-label">Negocio · Ciudad</label><input type="text" id="t${i}-biz" /></div>
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════
+//   HELPERS
+// ══════════════════════════════════════
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.add('active');
+  btn.classList.add('active');
+  activeTab = name;
+}
+
+function preview(inputId, previewId) {
+  const url  = document.getElementById(inputId)?.value?.trim();
+  const prev = document.getElementById(previewId);
+  if (!prev || !prev.parentNode) return;
+  if (url && url.startsWith('http')) {
+    const img = document.createElement('img');
+    img.id = previewId;
+    img.src = url;
+    img.style.cssText = 'width:100%;height:160px;object-fit:cover;border:1px solid var(--accent-light);margin-top:8px;display:block;';
+    img.onerror = () => { const ph=document.createElement('div'); ph.className='img-placeholder'; ph.id=previewId; ph.textContent='URL no válida'; img.parentNode&&img.parentNode.replaceChild(ph,img); };
+    prev.parentNode.replaceChild(img, prev);
+  }
+}
+
+function get(id) { const el=document.getElementById(id); return el?el.value.trim():''; }
+function set(id, val) { const el=document.getElementById(id); if(el) el.value=val; }
+
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  clearTimeout(t._t);
+  t._t = setTimeout(()=>t.classList.remove('show'), 4000);
+}
+
+document.getElementById('inp-token').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+</script>
+</body>
+</html>
