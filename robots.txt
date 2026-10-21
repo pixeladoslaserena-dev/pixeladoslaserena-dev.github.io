@@ -2,5 +2,6 @@ User-agent: *
 Allow: /
 Disallow: /admin.html
 Disallow: /gestion-px.html
+Disallow: /optimizador-fotos.html
 
 Sitemap: https://pixelados.cl/sitemap.xml
