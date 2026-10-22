@@ -80,7 +80,7 @@
   doc.title=data.seo.title;meta('meta[name="description"]',data.seo.description);meta('meta[name="robots"]',data.seo.indexable?'index,follow':'noindex,follow');
   meta('meta[property="og:title"]',data.seo.title);meta('meta[property="og:description"]',data.seo.description);
   meta('meta[property="og:image"]',new URL(data.seo.ogImage||data.hero.image,'https://pixelados.cl/').href);
-  const ld={'@context':'https://schema.org','@type':'ProfessionalService',name:data.brand,url:'https://pixelados.cl/',telephone:'+'+data.contact.whatsapp,areaServed:data.contact.area.split(/\s+y\s+|,/).map(s=>s.trim()).filter(Boolean),sameAs:['https://www.instagram.com/'+data.contact.instagram+'/']};
+  const ld={'@context':'https://schema.org','@type':'ProfessionalService','@id':'https://pixelados.cl/#pixelados',name:data.brand,url:'https://pixelados.cl/',description:data.seo.description,telephone:'+'+data.contact.whatsapp,areaServed:data.contact.area.split(/\s+y\s+|,/).map(s=>s.trim()).filter(Boolean),sameAs:['https://www.instagram.com/'+data.contact.instagram+'/'],founder:{'@type':'Person',name:'Ximena Carroza',jobTitle:'Fotógrafa',sameAs:['https://www.instagram.com/'+data.contact.instagram+'/']}};
   if(data.contact.email)ld.email=data.contact.email;
   doc.querySelector('#structured-data').textContent=jsonText(ld);
   // Keep the first response meaningful for search engines and visitors before JavaScript.
